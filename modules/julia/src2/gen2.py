@@ -178,27 +178,31 @@ static PyObject* pyopencv_${name}_repr(PyObject* self)
 
 ${getset_code}
 
+/*
 static PyGetSetDef pyopencv_${name}_getseters[] =
-{${getset_inits}
-    {NULL}  /* Sentinel */
+{   //${getset_inits}
+    {NULL}  // Sentinel
 };
+*/
 
 ${methods_code}
 
+/*
 static PyMethodDef pyopencv_${name}_methods[] =
 {
-${methods_inits}
+//${methods_inits}
     {NULL,          NULL}
 };
+*/
 
 static void pyopencv_${name}_specials(void)
 {
-   // pyopencv_${name}_Type.tp_base = ${baseptr};
-   // pyopencv_${name}_Type.tp_dealloc = pyopencv_${name}_dealloc;
-   // pyopencv_${name}_Type.tp_repr = pyopencv_${name}_repr;
-   // pyopencv_${name}_Type.tp_getset = pyopencv_${name}_getseters;
-   // pyopencv_${name}_Type.tp_init = (initproc)${constructor};
-   // pyopencv_${name}_Type.tp_methods = pyopencv_${name}_methods;${extra_specials}
+    // pyopencv_${name}_Type.tp_base = ${baseptr};
+    // pyopencv_${name}_Type.tp_dealloc = pyopencv_${name}_dealloc;
+    // pyopencv_${name}_Type.tp_repr = pyopencv_${name}_repr;
+    // pyopencv_${name}_Type.tp_getset = pyopencv_${name}_getseters;
+    // pyopencv_${name}_Type.tp_init = (initproc)${constructor};
+    // pyopencv_${name}_Type.tp_methods = pyopencv_${name}_methods;${extra_specials}
 }
 """)
 

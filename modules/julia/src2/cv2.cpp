@@ -18,6 +18,20 @@
 //     uint32_t _asdf;
 // };
 
+void PyErr_Clear() {
+
+}
+
+enum PyError {
+    PyExc_TypeError
+};
+
+
+void PyErr_SetString(PyError error, const char*) {
+
+}
+
+
 struct PyString {
     uint32_t _asdf;
 };
@@ -30,6 +44,25 @@ struct PyObject {
     const char* name;
     uint32_t size;
 };
+
+#define Py_DECREF(x)
+
+
+char convert_to_char(const PyObject*, ...) {
+    return 0;
+}
+
+PyObject* Py_BuildValue(const char*, ...) {
+    return nullptr;
+}
+
+PyObject* PyMapping_GetItemString(const PyObject* , const char*) {
+    return nullptr;
+}
+
+bool PyMapping_HasKeyString(const PyObject*, const char*) {
+    return false;
+}
 
 PyObject* PyString_FromString(const char*);
 PyObject* PyString_FromString(const char*) {
@@ -1564,6 +1597,10 @@ bool pyopencv_to(PyObject* obj, Vec2i& v, const char* name)
 //     return Py_BuildValue("(ddd)", p.x, p.y, p.z);
 // }
 
+template<typename _Tp> struct pyopencvVecConverter
+{
+};
+
 // template<typename _Tp> struct pyopencvVecConverter
 // {
 //     static bool to(PyObject* obj, std::vector<_Tp>& value, const ArgInfo info)
@@ -1694,6 +1731,11 @@ bool pyopencv_to(PyObject* obj, std::vector<_Tp>& value, const ArgInfo info)
 //     return pyopencvVecConverter<_Tp>::from(value);
 // }
 
+template<typename _Tp> static inline bool pyopencv_to_generic_vec(PyObject* obj, std::vector<_Tp>& value, const ArgInfo info)
+{
+    return false;
+}
+
 // template<typename _Tp> static inline bool pyopencv_to_generic_vec(PyObject* obj, std::vector<_Tp>& value, const ArgInfo info)
 // {
 //     if(!obj || obj == Py_None)
@@ -1717,6 +1759,11 @@ bool pyopencv_to(PyObject* obj, std::vector<_Tp>& value, const ArgInfo info)
 //     Py_DECREF(seq);
 //     return i == n;
 // }
+
+template<typename _Tp> static inline PyObject* pyopencv_from_generic_vec(const std::vector<_Tp>& value)
+{
+    return nullptr;
+}
 
 // template<typename _Tp> static inline PyObject* pyopencv_from_generic_vec(const std::vector<_Tp>& value)
 // {
@@ -2140,7 +2187,7 @@ bool pyopencv_to(PyObject *obj, RotatedRect& dst, const char *name) {
 // #  pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 // #endif
 
-//typedef std::vector<Range> vector_Range;
+typedef std::vector<Range> vector_Range;
 
 CV_PY_TO_CLASS(UMat);
 CV_PY_FROM_CLASS(UMat);
@@ -2173,6 +2220,409 @@ static Mat cv_UMat_get(const UMat* /*_self*/)
     return m;
 }
 
+#include "opencv2/core/cuda.hpp"
+
+typedef std::vector<cuda::GpuMat> vector_GpuMat;
+typedef cuda::GpuMat::Allocator GpuMat_Allocator;
+typedef cuda::HostMem::AllocType HostMem_AllocType;
+typedef cuda::Event::CreateFlags Event_CreateFlags;
+
+template<> struct pyopencvVecConverter<cuda::GpuMat>
+{
+    static bool to(PyObject* obj, std::vector<cuda::GpuMat>& value, const ArgInfo info)
+    {
+        return pyopencv_to_generic_vec(obj, value, info);
+    }
+
+    static PyObject* from(const std::vector<cuda::GpuMat>& value)
+    {
+        return pyopencv_from_generic_vec(value);
+    }
+};
+
+CV_PY_TO_CLASS(cuda::GpuMat);
+CV_PY_TO_CLASS(cuda::Stream);
+CV_PY_TO_CLASS(cuda::Event);
+CV_PY_TO_CLASS(cuda::HostMem);
+
+CV_PY_TO_CLASS_PTR(cuda::GpuMat);
+CV_PY_TO_CLASS_PTR(cuda::GpuMat::Allocator);
+
+CV_PY_FROM_CLASS(cuda::GpuMat);
+CV_PY_FROM_CLASS(cuda::Stream);
+CV_PY_FROM_CLASS(cuda::HostMem);
+
+CV_PY_FROM_CLASS_PTR(cuda::GpuMat::Allocator);
+
+typedef cvflann::flann_distance_t cvflann_flann_distance_t;
+typedef cvflann::flann_algorithm_t cvflann_flann_algorithm_t;
+
+template<>
+PyObject* pyopencv_from(const cvflann_flann_algorithm_t& value)
+{
+    // return PyInt_FromLong(int(value));
+    return nullptr;
+}
+
+template<>
+PyObject* pyopencv_from(const cvflann_flann_distance_t& value)
+{
+    // return PyInt_FromLong(int(value));
+    return nullptr;
+}
+
+template<>
+bool pyopencv_to(PyObject *o, cv::flann::IndexParams& p, const char *name)
+{
+    return false;
+    // CV_UNUSED(name);
+    // bool ok = true;
+    // PyObject* key = NULL;
+    // PyObject* item = NULL;
+    // Py_ssize_t pos = 0;
+
+    // if (!o || o == Py_None)
+    //     return true;
+
+    // if(PyDict_Check(o)) {
+    //     while(PyDict_Next(o, &pos, &key, &item)) {
+    //         if( !PyString_Check(key) ) {
+    //             ok = false;
+    //             break;
+    //         }
+
+    //         String k = PyString_AsString(key);
+    //         if( PyString_Check(item) )
+    //         {
+    //             const char* value = PyString_AsString(item);
+    //             p.setString(k, value);
+    //         }
+    //         else if( !!PyBool_Check(item) )
+    //             p.setBool(k, item == Py_True);
+    //         else if( PyInt_Check(item) )
+    //         {
+    //             int value = (int)PyInt_AsLong(item);
+    //             if( strcmp(k.c_str(), "algorithm") == 0 )
+    //                 p.setAlgorithm(value);
+    //             else
+    //                 p.setInt(k, value);
+    //         }
+    //         else if( PyFloat_Check(item) )
+    //         {
+    //             double value = PyFloat_AsDouble(item);
+    //             p.setDouble(k, value);
+    //         }
+    //         else
+    //         {
+    //             ok = false;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // return ok && !PyErr_Occurred();
+}
+
+template<>
+bool pyopencv_to(PyObject* obj, cv::flann::SearchParams & value, const char * name)
+{
+    // return pyopencv_to<cv::flann::IndexParams>(obj, value, name);
+    return false;
+}
+
+template<>
+bool pyopencv_to(PyObject *o, cvflann::flann_distance_t& dist, const char *name)
+{
+    return false;
+    // int d = (int)dist;
+    // bool ok = pyopencv_to(o, d, name);
+    // dist = (cvflann::flann_distance_t)d;
+    // return ok;
+}
+
+typedef dnn::DictValue LayerId;
+typedef std::vector<dnn::MatShape> vector_MatShape;
+typedef std::vector<std::vector<dnn::MatShape> > vector_vector_MatShape;
+
+template<>
+bool pyopencv_to(PyObject *o, dnn::DictValue &dv, const char *name)
+{
+    return false;
+    // CV_UNUSED(name);
+    // if (!o || o == Py_None)
+    //     return true; //Current state will be used
+    // else if (PyLong_Check(o))
+    // {
+    //     dv = dnn::DictValue((int64)PyLong_AsLongLong(o));
+    //     return true;
+    // }
+    // else if (PyInt_Check(o))
+    // {
+    //     dv = dnn::DictValue((int64)PyInt_AS_LONG(o));
+    //     return true;
+    // }
+    // else if (PyFloat_Check(o))
+    // {
+    //     dv = dnn::DictValue(PyFloat_AS_DOUBLE(o));
+    //     return true;
+    // }
+    // else if (PyString_Check(o))
+    // {
+    //     dv = dnn::DictValue(String(PyString_AsString(o)));
+    //     return true;
+    // }
+    // else
+    //     return false;
+}
+
+template<>
+bool pyopencv_to(PyObject *o, std::vector<Mat> &blobs, const char *name) //required for Layer::blobs RW
+{
+    return false;
+//   return pyopencvVecConverter<Mat>::to(o, blobs, ArgInfo(name, false));
+}
+
+template<typename T>
+PyObject* pyopencv_from(const dnn::DictValue &dv)
+{
+    return nullptr;
+    // if (dv.size() > 1)
+    // {
+    //     std::vector<T> vec(dv.size());
+    //     for (int i = 0; i < dv.size(); ++i)
+    //         vec[i] = dv.get<T>(i);
+    //     return pyopencv_from_generic_vec(vec);
+    // }
+    // else
+    //     return pyopencv_from(dv.get<T>());
+}
+
+template<>
+PyObject* pyopencv_from(const dnn::DictValue &dv)
+{
+    return nullptr;
+    // if (dv.isInt()) return pyopencv_from<int>(dv);
+    // if (dv.isReal()) return pyopencv_from<float>(dv);
+    // if (dv.isString()) return pyopencv_from<String>(dv);
+    // CV_Error(Error::StsNotImplemented, "Unknown value type");
+    // return NULL;
+}
+
+template<>
+PyObject* pyopencv_from(const dnn::LayerParams& lp)
+{
+    return nullptr;
+    // PyObject* dict = PyDict_New();
+    // for (std::map<String, dnn::DictValue>::const_iterator it = lp.begin(); it != lp.end(); ++it)
+    // {
+    //     CV_Assert(!PyDict_SetItemString(dict, it->first.c_str(), pyopencv_from(it->second)));
+    // }
+    // return dict;
+}
+
+class pycvLayer CV_FINAL : public dnn::Layer
+{
+public:
+    pycvLayer(const dnn::LayerParams &params, PyObject* pyLayer) : Layer(params)
+    {
+        // PyGILState_STATE gstate;
+        // gstate = PyGILState_Ensure();
+
+        // PyObject* args = PyTuple_New(2);
+        // CV_Assert(!PyTuple_SetItem(args, 0, pyopencv_from(params)));
+        // CV_Assert(!PyTuple_SetItem(args, 1, pyopencv_from(params.blobs)));
+        // o = PyObject_CallObject(pyLayer, args);
+
+        // Py_DECREF(args);
+        // PyGILState_Release(gstate);
+        // if (!o)
+        //     CV_Error(Error::StsError, "Failed to create an instance of custom layer");
+    }
+
+    static void registerLayer(const std::string& type, PyObject* o)
+    {
+        // std::map<std::string, std::vector<PyObject*> >::iterator it = pyLayers.find(type);
+        // if (it != pyLayers.end())
+        //     it->second.push_back(o);
+        // else
+        //     pyLayers[type] = std::vector<PyObject*>(1, o);
+    }
+
+    static void unregisterLayer(const std::string& type)
+    {
+        // std::map<std::string, std::vector<PyObject*> >::iterator it = pyLayers.find(type);
+        // if (it != pyLayers.end())
+        // {
+        //     if (it->second.size() > 1)
+        //         it->second.pop_back();
+        //     else
+        //         pyLayers.erase(it);
+        // }
+    }
+
+    static Ptr<dnn::Layer> create(dnn::LayerParams &params)
+    {
+        return Ptr<dnn::Layer>(nullptr);
+        // std::map<std::string, std::vector<PyObject*> >::iterator it = pyLayers.find(params.type);
+        // if (it == pyLayers.end())
+        //     CV_Error(Error::StsNotImplemented, "Layer with a type \"" + params.type +
+        //                                        "\" is not implemented");
+        // CV_Assert(!it->second.empty());
+        // return Ptr<dnn::Layer>(new pycvLayer(params, it->second.back()));
+    }
+
+    virtual bool getMemoryShapes(const std::vector<std::vector<int> > &inputs,
+                                 const int,
+                                 std::vector<std::vector<int> > &outputs,
+                                 std::vector<std::vector<int> > &) const CV_OVERRIDE
+    {
+        return false;
+        // PyGILState_STATE gstate;
+        // gstate = PyGILState_Ensure();
+
+        // PyObject* args = PyList_New(inputs.size());
+        // for(size_t i = 0; i < inputs.size(); ++i)
+        //     PyList_SET_ITEM(args, i, pyopencv_from_generic_vec(inputs[i]));
+
+        // PyObject* res = PyObject_CallMethodObjArgs(o, PyString_FromString("getMemoryShapes"), args, NULL);
+        // Py_DECREF(args);
+        // PyGILState_Release(gstate);
+        // if (!res)
+        //     CV_Error(Error::StsNotImplemented, "Failed to call \"getMemoryShapes\" method");
+        // CV_Assert(pyopencv_to_generic_vec(res, outputs, ArgInfo("", 0)));
+        // return false;
+    }
+
+    virtual void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays) CV_OVERRIDE
+    {
+        // PyGILState_STATE gstate;
+        // gstate = PyGILState_Ensure();
+
+        // std::vector<Mat> inputs, outputs;
+        // inputs_arr.getMatVector(inputs);
+        // outputs_arr.getMatVector(outputs);
+
+        // PyObject* args = pyopencv_from(inputs);
+        // PyObject* res = PyObject_CallMethodObjArgs(o, PyString_FromString("forward"), args, NULL);
+        // Py_DECREF(args);
+        // PyGILState_Release(gstate);
+        // if (!res)
+        //     CV_Error(Error::StsNotImplemented, "Failed to call \"forward\" method");
+
+        // std::vector<Mat> pyOutputs;
+        // CV_Assert(pyopencv_to(res, pyOutputs, ArgInfo("", 0)));
+
+        // CV_Assert(pyOutputs.size() == outputs.size());
+        // for (size_t i = 0; i < outputs.size(); ++i)
+        // {
+        //     CV_Assert(pyOutputs[i].size == outputs[i].size);
+        //     CV_Assert(pyOutputs[i].type() == outputs[i].type());
+        //     pyOutputs[i].copyTo(outputs[i]);
+        // }
+    }
+
+private:
+    // Map layers types to python classes.
+    static std::map<std::string, std::vector<PyObject*> > pyLayers;
+    PyObject* o;  // Instance of implemented python layer.
+};
+
+std::map<std::string, std::vector<PyObject*> > pycvLayer::pyLayers;
+
+static PyObject *pyopencv_cv_dnn_registerLayer(PyObject*, PyObject *args, PyObject *kw)
+{
+    return nullptr;
+    // const char *keywords[] = { "type", "class", NULL };
+    // char* layerType;
+    // PyObject *classInstance;
+
+    // if (!PyArg_ParseTupleAndKeywords(args, kw, "sO", (char**)keywords, &layerType, &classInstance))
+    //     return NULL;
+    // if (!PyCallable_Check(classInstance)) {
+    //     PyErr_SetString(PyExc_TypeError, "class must be callable");
+    //     return NULL;
+    // }
+
+    // pycvLayer::registerLayer(layerType, classInstance);
+    // dnn::LayerFactory::registerLayer(layerType, pycvLayer::create);
+    // Py_RETURN_NONE;
+}
+
+static PyObject *pyopencv_cv_dnn_unregisterLayer(PyObject*, PyObject *args, PyObject *kw)
+{
+    return nullptr;
+    // const char *keywords[] = { "type", NULL };
+    // char* layerType;
+
+    // if (!PyArg_ParseTupleAndKeywords(args, kw, "s", (char**)keywords, &layerType))
+    //     return NULL;
+
+    // pycvLayer::unregisterLayer(layerType);
+    // dnn::LayerFactory::unregisterLayer(layerType);
+    // Py_RETURN_NONE;
+}
+
+typedef SimpleBlobDetector::Params SimpleBlobDetector_Params;
+typedef AKAZE::DescriptorType AKAZE_DescriptorType;
+typedef AgastFeatureDetector::DetectorType AgastFeatureDetector_DetectorType;
+typedef FastFeatureDetector::DetectorType FastFeatureDetector_DetectorType;
+typedef DescriptorMatcher::MatcherType DescriptorMatcher_MatcherType;
+typedef KAZE::DiffusivityType KAZE_DiffusivityType;
+typedef ORB::ScoreType ORB_ScoreType;
+
+
+typedef Stitcher::Status Status;
+typedef Stitcher::Mode Mode;
+
+typedef std::vector<detail::ImageFeatures> vector_ImageFeatures;
+typedef std::vector<detail::MatchesInfo> vector_MatchesInfo;
+typedef std::vector<detail::CameraParams> vector_CameraParams;
+
+template<> struct pyopencvVecConverter<detail::ImageFeatures>
+{
+    static bool to(PyObject* obj, std::vector<detail::ImageFeatures>& value, const ArgInfo info)
+    {
+        // return pyopencv_to_generic_vec(obj, value, info);
+        return false;
+    }
+
+    static PyObject* from(const std::vector<detail::ImageFeatures>& value)
+    {
+        // return pyopencv_from_generic_vec(value);
+        return nullptr;
+    }
+};
+
+template<> struct pyopencvVecConverter<detail::MatchesInfo>
+{
+    static bool to(PyObject* obj, std::vector<detail::MatchesInfo>& value, const ArgInfo info)
+    {
+        return false;
+        // return pyopencv_to_generic_vec(obj, value, info);
+    }
+
+    static PyObject* from(const std::vector<detail::MatchesInfo>& value)
+    {
+        // return pyopencv_from_generic_vec(value);
+        return nullptr;
+    }
+};
+
+template<> struct pyopencvVecConverter<detail::CameraParams>
+{
+    static bool to(PyObject* obj, std::vector<detail::CameraParams>& value, const ArgInfo info)
+    {
+        return false;
+        // return pyopencv_to_generic_vec(obj, value, info);
+    }
+
+    static PyObject* from(const std::vector<detail::CameraParams>& value)
+    {
+        return nullptr;
+        // return pyopencv_from_generic_vec(value);
+    }
+};
+
 
 #include "pyopencv_generated_enums.h"
 #include "pyopencv_custom_headers.h"
@@ -2199,7 +2649,7 @@ static Mat cv_UMat_get(const UMat* /*_self*/)
 // struct ConstDef
 // {
 //     const char * name;
-//     long long val;
+//}     long long val;
 // };
 
 static void init_submodule(PyObject* root, const char * name, 

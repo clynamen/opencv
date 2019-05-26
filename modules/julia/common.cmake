@@ -50,7 +50,7 @@ endif()
 
 set_property(TARGET ${the_module} PROPERTY CXX_STANDARD 14)
 
-add_definitions(" -Wno-unused-variable -Wno-unused-parameter ")  
+add_definitions(" -Wno-unused-variable -Wno-unused-parameter -w  -Wfatal-errors")  
 
 if(APPLE)
   set_target_properties(${the_module} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
