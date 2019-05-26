@@ -13,6 +13,15 @@
 #endif
 
 #include <type_traits>  // std::enable_if
+#include <set>
+#include <algorithm>
+#include <string>
+
+std::string toUpper(const std::string& str) {
+    std::string newStr;
+    std::transform(str.begin(), str.end(), std::back_inserter(newStr), ::toupper);
+    return newStr;
+}
 
 // struct Range {
 //     uint32_t _asdf;
@@ -127,7 +136,7 @@ bool PyObject_TypeCheck(const PyObject* , const PyTypeObject* ) {
 }
 
 struct PyMethodDef {
-    const char * methodName;
+    const char * ml_name;
     PyObject (*fun)(PyObject*, PyObject*);
     uint32_t flags;
     const char *doc;
@@ -135,7 +144,7 @@ struct PyMethodDef {
 
 struct ConstDef {
     const char* name;
-    uint32_t value;
+    uint32_t val;
 };
 
 
@@ -2652,13 +2661,9 @@ template<> struct pyopencvVecConverter<detail::CameraParams>
 //}     long long val;
 // };
 
-static void init_submodule(PyObject* root, const char * name, 
-PyMethodDef* methods, ConstDef* consts) {
 
-}
-
-// static void init_submodule(PyObject * root, const char * name, PyMethodDef * methods, ConstDef * consts)
-// {
+static void init_submodule(jlcxx::Module& root, const char * name, PyMethodDef * methods, ConstDef * consts)
+{
 //   // traverse and create nested submodules
 //   std::string s = name;
 //   size_t i = s.find('.');
@@ -2683,6 +2688,8 @@ PyMethodDef* methods, ConstDef* consts) {
 //         root = submod;
 //   }
 
+  const std::string moduleName = toUpper(std::string(&name[4]));
+
 //   // populate module's dict
 //   PyObject * d = PyModule_GetDict(root);
 //   for (PyMethodDef * m = methods; m->ml_name != NULL; ++m)
@@ -2691,12 +2698,28 @@ PyMethodDef* methods, ConstDef* consts) {
 //     PyDict_SetItemString(d, m->ml_name, method_obj);
 //     Py_DECREF(method_obj);
 //   }
-//   for (ConstDef * c = consts; c->name != NULL; ++c)
-//   {
-//     PyDict_SetItemString(d, c->name, PyLong_FromLongLong(c->val));
-//   }
+  // populate module's dict
+  for (PyMethodDef * m = methods; m->ml_name != NULL; ++m)
+  {
+    std::cout  << "Adding method: " << m->ml_name <<  std::endl;
+    // PyObject * method_obj = PyCFunction_NewEx(m, NULL, NULL);
+    // PyDict_SetItemString(d, m->ml_name, method_obj);
+    // Py_DECREF(method_obj);
+  }
 
-// }
+  std::set<std::string> addedConstants;
+
+  for (ConstDef * c = consts; c->name != NULL; ++c)
+  {
+    const std::string newConstantName = moduleName + "_" + c->name;
+    bool newConstant = addedConstants.insert(newConstantName).second;
+    if(newConstant) {
+        // std::cout <<  "Adding " << newConstantName  << " = " << (int) c->val << std::endl;
+        root.set_const(newConstantName, c->val);
+    }
+  }
+
+}
 
 #include "pyopencv_generated_ns_reg.h"
 
@@ -2725,20 +2748,21 @@ PyMethodDef* methods, ConstDef* consts) {
 // #else
 // extern "C" CV_EXPORTS void initcv2();
 
+#include "pyopencv_generated_type_reg.h"
+
 void initcv2()
 // #endif
 {
 //   import_array();
 
-#include "pyopencv_generated_type_reg.h"
 
 // #if PY_MAJOR_VERSION >= 3
 //   PyObject* m = PyModule_Create(&cv2_moduledef);
 // #else
 //   PyObject* m = Py_InitModule(MODULESTR, special_methods);
 // #endif
-  PyObject* m = nullptr;
-  init_submodules(m); // from "pyopencv_generated_ns_reg.h"
+//   PyObject* m = nullptr;
+//   init_submodules(m); // from "pyopencv_generated_ns_reg.h"
 
 //   PyObject* d = PyModule_GetDict(m);
 
@@ -2810,4 +2834,17 @@ void initcv2()
 // #if PY_MAJOR_VERSION >= 3
 //     return m;
 // #endif
+}
+
+std::string greet(int a, int c)
+{
+   std::string s = "result: a + c == ";
+   s += std::to_string(a + c);
+   return s;
+}
+
+JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
+{
+  mod.method("greet", &greet);
+  init_submodules(mod); // from "pyopencv_generated_ns_reg.h"
 }

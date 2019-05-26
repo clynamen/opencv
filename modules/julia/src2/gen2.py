@@ -1018,7 +1018,7 @@ class PythonWrapperGenerator(object):
         self.code_ns_reg.write('    {NULL, 0}\n};\n\n')
 
     def gen_namespaces_reg(self):
-        self.code_ns_reg.write('static void init_submodules(PyObject * root) \n{\n')
+        self.code_ns_reg.write('static void init_submodules(jlcxx::Module& root) \n{\n')
         for ns_name in sorted(self.namespaces):
             if ns_name.split('.')[0] == 'cv':
                 wname = normalize_class_name(ns_name)

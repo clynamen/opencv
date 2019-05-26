@@ -229,3 +229,6 @@ unset(PYTHON_CVPY_PROCESS)
 unset(CVPY_SUFFIX)
 unset(PYTHON_INSTALL_CONFIGURATIONS)
 unset(PYTHON_INSTALL_ARCHIVE)
+
+link_directories("/home/clynamen/.julia/packages/CxxWrap/sarOk/deps/usr/lib/")
+target_link_libraries(${the_module} julia cxxwrap_julia)
