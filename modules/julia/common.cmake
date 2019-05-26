@@ -9,6 +9,7 @@ include_directories(SYSTEM
     "/usr/include/julia/"
     ${CMAKE_SOURCE_DIR}/modules/calib3d/include
     ${CMAKE_SOURCE_DIR}/modules/core/include
+    ${CMAKE_SOURCE_DIR}/modules/core/misc/python
     ${CMAKE_SOURCE_DIR}/modules/flann/include
     ${CMAKE_SOURCE_DIR}/modules/dnn/include
     ${CMAKE_SOURCE_DIR}/modules/features2d/include
@@ -48,6 +49,8 @@ if(TARGET gen_opencv_julia_source)
 endif()
 
 set_property(TARGET ${the_module} PROPERTY CXX_STANDARD 14)
+
+add_definitions(" -Wno-unused-variable -Wno-unused-parameter ")  
 
 if(APPLE)
   set_target_properties(${the_module} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
