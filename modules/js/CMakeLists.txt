@@ -78,8 +78,6 @@ add_custom_command(
    DEPENDS ${opencv_hdrs}
    DEPENDS ${JS_HELPER})
 
-add_definitions("-std=c++11")
-
 link_libraries(${OPENCV_MODULE_${the_module}_DEPS})
 
 ocv_add_executable(${the_module} ${bindings_cpp})

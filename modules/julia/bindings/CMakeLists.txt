@@ -1,4 +1,4 @@
-set(MODULE_NAME "python_bindings_generator")
+set(MODULE_NAME "julia_bindings_generator")
 set(OPENCV_MODULE_IS_PART_OF_WORLD FALSE)
 ocv_add_module(${MODULE_NAME} INTERNAL)
 
@@ -61,6 +61,7 @@ set(cv2_generated_files
 
 string(REPLACE ";" "\n" opencv_hdrs_ "${opencv_hdrs}")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/headers.txt" "${opencv_hdrs_}")
+message("for JULIA will run \n\n "${PYTHON_DEFAULT_EXECUTABLE}" "${PYTHON_SOURCE_DIR}/src2/gen2.py" "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/headers.txt "\n\n")
 add_custom_command(
     OUTPUT ${cv2_generated_files}
     COMMAND "${PYTHON_DEFAULT_EXECUTABLE}" "${PYTHON_SOURCE_DIR}/src2/gen2.py" "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/headers.txt"
@@ -73,7 +74,7 @@ add_custom_command(
 
 message("\n\nCV2 cv2_generated_files\n${cv2_generated_files}\n\n\n")
 
-add_custom_target(gen_opencv_python_source DEPENDS ${cv2_generated_files})
+add_custom_target(gen_opencv_julia_source DEPENDS ${cv2_generated_files})
 
 set(cv2_custom_hdr "${CMAKE_CURRENT_BINARY_DIR}/pyopencv_custom_headers.h")
 set(cv2_custom_hdr_str "//user-defined headers\n")
@@ -119,5 +120,5 @@ ocv_cmake_script_append_var(PYTHON_CONFIG_SCRIPT
     cv2_custom_hdr
     cv2_generated_files
 )
-set(CMAKE_HELPER_SCRIPT "${CMAKE_BINARY_DIR}/opencv_python_config.cmake")
+set(CMAKE_HELPER_SCRIPT "${CMAKE_BINARY_DIR}/opencv_julia_config.cmake")
 file(GENERATE OUTPUT "${CMAKE_HELPER_SCRIPT}" CONTENT "${PYTHON_CONFIG_SCRIPT}")
